@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社会科クエスト</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            grid-template-rows: auto 1fr;
+            height: 95vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+            position: relative;
+            grid-column: 1 / -1;
+        }
+        
+        .header::before {
+            content: '⚔️';
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+        }
+        
+        .header::after {
+            content: '🏰';
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2em;
+        }
+        
+        .title {
+            font-size: 2.8em;
+            font-weight: 900;
+            margin-bottom: 8px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+            letter-spacing: 0.1em;
+            background: linear-gradient(45deg, #ffffff, #f8f9fa, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+        
+        .subtitle {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+        
+        .world-map {
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 20%, #228B22 40%, #8B4513 60%, #4682B4 80%, #DC143C 100%);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            overflow-y: auto;
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        .hero-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+        }
+        
+        .hero-avatar {
+            font-size: 3em;
+            filter: drop-shadow(3px 3px 8px rgba(0,0,0,0.4));
+            transition: all 0.5s ease;
+            animation: heroGlow 3s infinite alternate;
+        }
+        
+        .hero-title {
+            font-size: 1em;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .level-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 0.9em;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        @keyframes heroGlow {
+            from { 
+                filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+                transform: scale(1);
+            }
+            to { 
+                filter: drop-shadow(2px 2px 8px rgba(255,255,255,0.4));
+                transform: scale(1.05);
+            }
+        }
+        
+        .map-board {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 3px;
+            max-width: 800px;
+            width: 100%;
+            background: rgba(0,0,0,0.1);
+            padding: 10px;
+            border-radius: 15px;
+            position: relative;
+        }
+        
+        .map-tile {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        /* 村エリア (1-10) */
+        .map-tile.village {
+            background: linear-gradient(135deg, #98FB98, #90EE90);
+            box-shadow: 0 2px 8px rgba(152, 251, 152, 0.4);
+        }
+        
+        /* 森エリア (11-20) */
+        .map-tile.forest {
+            background: linear-gradient(135deg, #228B22, #32CD32);
+            box-shadow: 0 2px 8px rgba(34, 139, 34, 0.4);
+        }
+        
+        /* 山エリア (21-30) */
+        .map-tile.mountain {
+            background: linear-gradient(135deg, #8B4513, #A0522D);
+            box-shadow: 0 2px 8px rgba(139, 69, 19, 0.4);
+        }
+        
+        /* 海エリア (31-40) */
+        .map-tile.ocean {
+            background: linear-gradient(135deg, #4682B4, #87CEEB);
+            box-shadow: 0 2px 8px rgba(70, 130, 180, 0.4);
+        }
+        
+        /* 火山・魔王城エリア (41-50) */
+        .map-tile.volcano {
+            background: linear-gradient(135deg, #DC143C, #FF4500);
+            box-shadow: 0 2px 8px rgba(220, 20, 60, 0.4);
+        }
+        
+        /* ボスタイル */
+        .map-tile.boss {
+            width: 40px;
+            height: 40px;
+            font-size: 1.4em;
+            animation: bossGlow 2s infinite alternate;
+            border: 3px solid #FFD700;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.6);
+        }
+        
+        /* 最終ボス */
+        .map-tile.final-boss {
+            width: 45px;
+            height: 45px;
+            font-size: 1.6em;
+            animation: finalBossGlow 1.5s infinite alternate;
+            border: 4px solid #FF1493;
+            box-shadow: 0 6px 20px rgba(255, 20, 147, 0.8);
+        }
+        
+        @keyframes bossGlow {
+            from { 
+                box-shadow: 0 4px 15px rgba(255, 215, 0, 0.6);
+                transform: scale(1);
+            }
+            to { 
+                box-shadow: 0 6px 25px rgba(255, 215, 0, 0.9);
+                transform: scale(1.1);
+            }
+        }
+        
+        @keyframes finalBossGlow {
+            from { 
+                box-shadow: 0 6px 20px rgba(255, 20, 147, 0.8);
+                transform: scale(1) rotate(-2deg);
+            }
+            to { 
+                box-shadow: 0 8px 30px rgba(255, 20, 147, 1);
+                transform: scale(1.15) rotate(2deg);
+            }
+        }
+        
+        .hero {
+            position: absolute;
+            font-size: 1.5em;
+            z-index: 10;
+            transition: all 1.2s ease-in-out;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+            pointer-events: none;
+        }
+        
+        .map-tile.defeated {
+            filter: grayscale(70%) brightness(0.7);
+            opacity: 0.8;
+        }
+        
+        .defeated-mark {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            font-size: 0.7em;
+            z-index: 15;
+            animation: defeatPulse 2s infinite;
+        }
+        
+        @keyframes defeatPulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% { 
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+        
+        .area-label {
+            background: rgba(255,255,255,0.9);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin: 10px 0;
+        }
+        
+        .quiz-section {
+            padding: 20px;
+            grid-column: 2;
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        
+        .progress-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .progress-text {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .current-stage {
+            font-size: 1em;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .goal-text {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #e17055;
+        }
+        
+        .current-area {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #28a745;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 20px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            text-align: center;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-icon {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+        
+        .btn-subtitle {
+            display: block;
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-top: 3px;
+        }
+        
+        .reset-section {
+            text-align: center;
+            margin-top: 15px;
+            padding: 15px 0;
+            border-top: 2px dashed #ddd;
+        }
+        
+        .reset-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .reset-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .result-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            animation: modalSlideIn 0.5s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .result-title {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .result-message {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .exp-gain {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            animation: expGlow 2s infinite alternate;
+        }
+        
+        @keyframes expGlow {
+            from { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+            to { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+        }
+        
+        .close-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 20px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">社会科クエスト</h1>
+            <p class="subtitle">村から魔王の城まで、知識を集めて真の勇者を目指そう！</p>
+        </div>
+        
+        <div class="world-map">
+            <div class="hero-display">
+                <div class="hero-avatar" id="heroAvatar">🧑‍🎓</div>
+                <div class="hero-title" id="heroTitle">見習い学者</div>
+                <div class="level-badge">Lv.<span id="playerLevel">1</span></div>
+            </div>
+            
+            <div class="area-label">🏘️ 平和な村 → 🌲 深い森 → ⛰️ 険しい山 → 🌊 広い海 → 🌋 魔王の城</div>
+            
+            <div class="map-board" id="mapBoard">
+                <!-- マップタイルはJavaScriptで生成 -->
+            </div>
+        </div>
+        
+        <div class="quiz-section">
+            <div class="progress-info">
+                <div class="progress-text">
+                    <span class="current-stage">現在のマス: <span id="stageNumber">1</span>/50</span>
+                    <span class="goal-text">🏆 ゴールまであと<span id="remainingSteps">49</span>マス！</span>
+                    <span class="current-area" id="currentArea">📍 平和な村エリア</span>
+                </div>
+            </div>
+            
+            <button class="submit-btn" id="perfectBtn">
+                <span class="btn-icon">🎯</span>
+                クラスの目標を達成！
+                <span class="btn-subtitle">勇者を1マス進める</span>
+            </button>
+            
+            <div class="reset-section">
+                <button class="reset-btn" id="resetBtn">
+                    最初からやり直す
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="result-modal" id="resultModal">
+        <div class="result-content">
+            <div class="result-icon" id="resultIcon">🎉</div>
+            <h2 class="result-title" id="resultTitle">素晴らしい！</h2>
+            <p class="result-message" id="resultMessage">全問正解です！</p>
+            <div class="exp-gain" id="expGain">+50 EXP獲得！</div>
+            <button class="close-btn" id="closeBtn">続ける</button>
+        </div>
+    </div>
+
+    <script>
+        let gameData = {
+            level: 1,
+            exp: 0,
+            position: 1, // 1-50のマス
+            stage: 1
+        };
+
+        // マップデータ
+        const mapData = [
+            // 村エリア (1-10) - 1行目
+            { pos: 1, emoji: '🏘️', type: 'village', area: '平和な村' },
+            { pos: 2, emoji: '🏘️', type: 'village', area: '平和な村' },
+            { pos: 3, emoji: '🏘️', type: 'village', area: '平和な村' },
+            { pos: 4, emoji: '🏘️', type: 'village', area: '平和な村' },
+            { pos: 5, emoji: '🏘️', type: 'village', area: '平和な村' },
+            { pos: 6, emoji: '🏘️', type: 'village', area: '平和な村' },
+            { pos: 7, emoji: '🏘️', type: 'village', area: '平和な村' },
+            { pos: 8, emoji: '🏘️', type: 'village', area: '平和な村' },
+            { pos: 9, emoji: '🏘️', type: 'village', area: '平和な村' },
+            { pos: 10, emoji: '🐺', type: 'village boss', area: '平和な村' },
+            
+            // 森エリア (11-20) - 2行目
+            { pos: 11, emoji: '🌲', type: 'forest', area: '深い森' },
+            { pos: 12, emoji: '🌲', type: 'forest', area: '深い森' },
+            { pos: 13, emoji: '🌲', type: 'forest', area: '深い森' },
+            { pos: 14, emoji: '🌲', type: 'forest', area: '深い森' },
+            { pos: 15, emoji: '🌲', type: 'forest', area: '深い森' },
+            { pos: 16, emoji: '🌲', type: 'forest', area: '深い森' },
+            { pos: 17, emoji: '🌲', type: 'forest', area: '深い森' },
+            { pos: 18, emoji: '🌲', type: 'forest', area: '深い森' },
+            { pos: 19, emoji: '🌲', type: 'forest', area: '深い森' },
+            { pos: 20, emoji: '🐉', type: 'forest boss', area: '深い森' },
+            
+            // 山エリア (21-30) - 3行目
+            { pos: 21, emoji: '⛰️', type: 'mountain', area: '険しい山' },
+            { pos: 22, emoji: '⛰️', type: 'mountain', area: '険しい山' },
+            { pos: 23, emoji: '⛰️', type: 'mountain', area: '険しい山' },
+            { pos: 24, emoji: '⛰️', type: 'mountain', area: '険しい山' },
+            { pos: 25, emoji: '⛰️', type: 'mountain', area: '険しい山' },
+            { pos: 26, emoji: '⛰️', type: 'mountain', area: '険しい山' },
+            { pos: 27, emoji: '⛰️', type: 'mountain', area: '険しい山' },
+            { pos: 28, emoji: '⛰️', type: 'mountain', area: '険しい山' },
+            { pos: 29, emoji: '⛰️', type: 'mountain', area: '険しい山' },
+            { pos: 30, emoji: '👹', type: 'mountain boss', area: '険しい山' },
+            
+            // 海エリア (31-40) - 4行目
+            { pos: 31, emoji: '🌊', type: 'ocean', area: '広い海' },
+            { pos: 32, emoji: '🌊', type: 'ocean', area: '広い海' },
+            { pos: 33, emoji: '🌊', type: 'ocean', area: '広い海' },
+            { pos: 34, emoji: '🌊', type: 'ocean', area: '広い海' },
+            { pos: 35, emoji: '🌊', type: 'ocean', area: '広い海' },
+            { pos: 36, emoji: '🌊', type: 'ocean', area: '広い海' },
+            { pos: 37, emoji: '🌊', type: 'ocean', area: '広い海' },
+            { pos: 38, emoji: '🌊', type: 'ocean', area: '広い海' },
+            { pos: 39, emoji: '🌊', type: 'ocean', area: '広い海' },
+            { pos: 40, emoji: '🐲', type: 'ocean boss', area: '広い海' },
+            
+            // 魔王城エリア (41-50) - 5行目
+            { pos: 41, emoji: '🏰', type: 'volcano', area: '魔王の領域' },
+            { pos: 42, emoji: '🏰', type: 'volcano', area: '魔王の領域' },
+            { pos: 43, emoji: '🏰', type: 'volcano', area: '魔王の領域' },
+            { pos: 44, emoji: '🏰', type: 'volcano', area: '魔王の領域' },
+            { pos: 45, emoji: '🏰', type: 'volcano', area: '魔王の領域' },
+            { pos: 46, emoji: '🏰', type: 'volcano', area: '魔王の領域' },
+            { pos: 47, emoji: '🏰', type: 'volcano', area: '魔王の領域' },
+            { pos: 48, emoji: '🏰', type: 'volcano', area: '魔王の領域' },
+            { pos: 49, emoji: '🏰', type: 'volcano', area: '魔王の領域' },
+            { pos: 50, emoji: '😈', type: 'volcano final-boss', area: '魔王の領域' }
+        ];
+
+        // マップを生成
+        function createMap() {
+            const mapBoard = document.getElementById('mapBoard');
+            mapBoard.innerHTML = '';
+            
+            mapData.forEach(tile => {
+                const tileElement = document.createElement('div');
+                tileElement.className = `map-tile ${tile.type}`;
+                tileElement.id = `tile${tile.pos}`;
+                tileElement.textContent = tile.emoji;
+                
+                if (tile.type.includes('boss')) {
+                    tileElement.classList.add('boss');
+                }
+                if (tile.pos === 50) {
+                    tileElement.classList.add('final-boss');
+                }
+                
+                mapBoard.appendChild(tileElement);
+            });
+            
+            // 勇者を追加
+            const hero = document.createElement('div');
+            hero.className = 'hero';
+            hero.id = 'hero';
+            hero.textContent = '🦸‍♂️';
+            mapBoard.appendChild(hero);
+        }
+
+        // ローカルストレージからデータを読み込み
+        function loadGameData() {
+            const saved = localStorage.getItem('socialStudiesQuest50');
+            if (saved) {
+                gameData = JSON.parse(saved);
+                updateDisplay();
+            } else {
+                updateDisplay();
+            }
+        }
+
+        // ゲームデータを保存
+        function saveGameData() {
+            localStorage.setItem('socialStudiesQuest50', JSON.stringify(gameData));
+        }
+
+        // 勇者の見た目を更新
+        function updateHeroAppearance() {
+            const heroAvatar = document.getElementById('heroAvatar');
+            const heroTitle = document.getElementById('heroTitle');
+            
+            const heroLevels = [
+                { level: 1, avatar: '🧑‍🎓', title: '見習い冒険者', color: '#74b9ff' },
+                { level: 6, avatar: '⚔️', title: '駆け出しの剣士', color: '#00b894' },
+                { level: 11, avatar: '🛡️', title: '初級騎士', color: '#fdcb6e' },
+                { level: 16, avatar: '🗡️', title: '中堅の戦士', color: '#e17055' },
+                { level: 21, avatar: '🥷', title: '熟練の剣豪', color: '#a29bfe' },
+                { level: 26, avatar: '🦸‍♂️', title: '歴戦の英雄', color: '#fd79a8' },
+                { level: 31, avatar: '👼', title: '聖なる守護者', color: '#00cec9' },
+                { level: 36, avatar: '🌟', title: '伝説の剣聖', color: '#ffd700' },
+                { level: 41, avatar: '✨', title: '光の導き手', color: '#ff7675' },
+                { level: 46, avatar: '👑', title: '伝説の勇者', color: '#6c5ce7' }
+            ];
+            
+            let currentHero = heroLevels[0];
+            
+            for (let i = heroLevels.length - 1; i >= 0; i--) {
+                if (gameData.level >= heroLevels[i].level) {
+                    currentHero = heroLevels[i];
+                    break;
+                }
+            }
+            
+            heroAvatar.textContent = currentHero.avatar;
+            heroTitle.textContent = currentHero.title;
+            heroTitle.style.color = currentHero.color;
+        }
+
+        // 現在のエリアを取得
+        function getCurrentArea() {
+            const currentTile = mapData.find(tile => tile.pos === gameData.position);
+            return currentTile ? currentTile.area : '未知の領域';
+        }
+
+        // 表示を更新
+        function updateDisplay() {
+            document.getElementById('playerLevel').textContent = gameData.level;
+            document.getElementById('stageNumber').textContent = gameData.position;
+            document.getElementById('remainingSteps').textContent = Math.max(0, 50 - gameData.position);
+            document.getElementById('currentArea').textContent = `📍 ${getCurrentArea()}エリア`;
+            
+            updateHeroAppearance();
+            updateHeroPosition();
+            
+            if (gameData.position >= 50) {
+                document.getElementById('perfectBtn').disabled = true;
+                document.getElementById('perfectBtn').innerHTML = `
+                    <span class="btn-icon">🏆</span>
+                    魔王討伐完了！
+                    <span class="btn-subtitle">おめでとうございます！</span>
+                `;
+            } else {
+                document.getElementById('perfectBtn').disabled = false;
+                document.getElementById('perfectBtn').innerHTML = `
+                    <span class="btn-icon">🎯</span>
+                    クラスの目標を達成！
+                    <span class="btn-subtitle">勇者を1マス進める</span>
+                `;
+            }
+        }
+
+        // 勇者の位置を更新
+        function updateHeroPosition() {
+            const hero = document.getElementById('hero');
+            const mapBoard = document.getElementById('mapBoard');
+            const tiles = mapBoard.querySelectorAll('.map-tile');
+            
+            // 全てのタイルの状態をリセット
+            tiles.forEach((tile, index) => {
+                tile.classList.remove('defeated');
+                const defeatedMark = tile.querySelector('.defeated-mark');
+                if (defeatedMark) {
+                    defeatedMark.remove();
+                }
+            });
+            
+            // 現在の位置のタイルを取得
+            const currentTile = document.getElementById(`tile${gameData.position}`);
+            if (currentTile) {
+                const rect = currentTile.getBoundingClientRect();
+                const boardRect = mapBoard.getBoundingClientRect();
+                
+                const x = rect.left - boardRect.left + (rect.width / 2);
+                const y = rect.top - boardRect.top + (rect.height / 2);
+                
+                hero.style.left = x + 'px';
+                hero.style.top = y + 'px';
+                hero.style.transform = 'translate(-50%, -50%)';
+            }
+            
+            // 倒したボスにマークを追加
+            for (let i = 1; i < gameData.position; i++) {
+                const tile = document.getElementById(`tile${i}`);
+                if (tile && (i % 10 === 0 || i === 50)) { // ボスタイル
+                    tile.classList.add('defeated');
+                    
+                    if (!tile.querySelector('.defeated-mark')) {
+                        const defeatedMark = document.createElement('div');
+                        defeatedMark.className = 'defeated-mark';
+                        defeatedMark.textContent = '💀';
+                        tile.appendChild(defeatedMark);
+                    }
+                }
+            }
+        }
+
+        // 勇者を1マス進める
+        function moveHero() {
+            if (gameData.position < 50) {
+                gameData.position++;
+                gameData.stage++;
+                
+                const oldLevel = gameData.level;
+                gameData.exp += 50;
+                let leveledUp = false;
+                
+                const newLevel = Math.floor(gameData.exp / 50) + 1;
+                if (newLevel > gameData.level) {
+                    gameData.level = newLevel;
+                    leveledUp = true;
+                }
+                
+                saveGameData();
+                updateDisplay();
+                
+                if (gameData.position >= 50) {
+                    showResult('goal', leveledUp);
+                } else if (gameData.position % 10 === 0) {
+                    showResult('boss', leveledUp);
+                } else {
+                    showResult('progress', leveledUp);
+                }
+            }
+        }
+
+        // 結果表示
+        function showResult(type, leveledUp = false) {
+            const modal = document.getElementById('resultModal');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const message = document.getElementById('resultMessage');
+            const expGain = document.getElementById('expGain');
+            
+            if (type === 'goal') {
+                icon.textContent = '🏆';
+                title.textContent = '魔王討伐完了！';
+                message.textContent = '素晴らしい！50マスの大冒険を完走し、魔王を倒しました！真の勇者になりました！';
+            } else if (type === 'boss') {
+                icon.textContent = '⚔️';
+                title.textContent = 'ボス討伐！';
+                message.textContent = `${getCurrentArea()}のボスを倒しました！次のエリアへ進みましょう！`;
+            } else if (type === 'reset') {
+                icon.textContent = '🔄';
+                title.textContent = 'リセット完了！';
+                message.textContent = 'ゲームが初期状態に戻りました！新しい50マスの大冒険を始めましょう！';
+                expGain.textContent = '新たなスタート！';
+                expGain.style.background = 'linear-gradient(135deg, #74b9ff, #0984e3)';
+                expGain.style.color = 'white';
+                modal.style.display = 'flex';
+                return;
+            } else {
+                icon.textContent = '⚡';
+                title.textContent = '素晴らしい！';
+                message.textContent = `マス${gameData.position - 1}クリア！勇者が1マス進みました！`;
+            }
+            
+            if (leveledUp) {
+                expGain.innerHTML = `+50 EXP獲得！<br><span style="color: #ff6b6b; font-size: 1.1em;">🎊 レベルアップ！ Lv.${gameData.level} 🎊</span>`;
+            } else {
+                expGain.textContent = '+50 EXP獲得！';
+            }
+            expGain.style.background = 'linear-gradient(135deg, #ffd700, #ffed4e)';
+            expGain.style.color = '#333';
+            
+            modal.style.display = 'flex';
+        }
+
+        // ゲームリセット
+        function resetGame() {
+            gameData = {
+                level: 1,
+                exp: 0,
+                position: 1,
+                stage: 1
+            };
+            
+            saveGameData();
+            updateDisplay();
+            
+            setTimeout(() => {
+                showResult('reset');
+            }, 300);
+        }
+
+        // イベントリスナー
+        document.getElementById('perfectBtn').addEventListener('click', function() {
+            if (gameData.position < 50) {
+                moveHero();
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+        document.getElementById('closeBtn').addEventListener('click', function() {
+            document.getElementById('resultModal').style.display = 'none';
+        });
+
+        // 初期化
+        createMap();
+        loadGameData();
+        
+        window.addEventListener('load', function() {
+            setTimeout(updateHeroPosition, 100);
+        });
+
+        window.addEventListener('resize', function() {
+            setTimeout(updateHeroPosition, 100);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96b4ad83f7fdd743',t:'MTc1NDU0NzcyOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
